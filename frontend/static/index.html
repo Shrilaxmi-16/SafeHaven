@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeHaven — Emergency & Disaster Co-Pilot (India)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --card-bg: #131b26;
+      --card-border: #223044;
+      --primary: #ef4444;
+      --primary-hover: #dc2626;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --info: #3b82f6;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Emergency Top Banner */
+    .top-emergency-bar {
+      background: linear-gradient(90deg, #991b1b, #ef4444, #b91c1c);
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .top-emergency-bar a.sos-call {
+      background: #fff;
+      color: #b91c1c;
+      padding: 0.35rem 1rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 800;
+      animation: pulse 1.8s infinite;
+      box-shadow: 0 0 10px rgba(255,255,255,0.6);
+    }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-icon { font-size: 1.8rem; }
+    .brand h1 { font-size: 1.4rem; font-weight: 800; color: #fff; }
+    .brand span { font-size: 0.8rem; color: #60a5fa; background: #1e293b; padding: 2px 8px; border-radius: 4px; border: 1px solid #334155; }
+
+    .nav-tabs { display: flex; gap: 0.5rem; }
+    .nav-tab {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-tab.active, .nav-tab:hover {
+      background: #2563eb;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      flex: 1;
+      max-width: 1540px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    @media (max-width: 1024px) {
+      .main-container { grid-template-columns: 1fr; }
+    }
+
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    /* Scenario & Household Selector Bar */
+    .scenario-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+    .control-group label { display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+    .control-group select, .control-group input {
+      width: 100%;
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #334155;
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+    }
+
+    /* High-Impact Directive Box */
+    .directive-banner {
+      border-radius: 8px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      border-left: 6px solid;
+    }
+    .directive-banner.evacuate {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: #ef4444;
+    }
+    .directive-banner.stay {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: #f59e0b;
+    }
+    .directive-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .directive-text {
+      font-size: 0.98rem;
+      line-height: 1.45;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    /* Checklists */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.65rem 0.8rem;
+      background: #182232;
+      border: 1px solid #233348;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .checklist-item input[type="checkbox"] { margin-top: 3px; accent-color: #2563eb; width: 18px; height: 18px; }
+
+    /* Safe Locations Cards */
+    .locations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    .loc-card {
+      background: #16202e;
+      border: 1px solid #233348;
+      border-radius: 8px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .loc-header { display: flex; justify-content: space-between; align-items: flex-start; font-weight: 700; font-size: 0.95rem; }
+    .loc-badge { font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+    .badge-shelter { background: #1e3a8a; color: #93c5fd; }
+    .badge-hospital { background: #064e3b; color: #6ee7b7; }
+    .badge-highground { background: #701a75; color: #f0abfc; }
+
+    /* Action Buttons */
+    .sos-btn-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .btn-sos {
+      flex: 1;
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+    }
+    .btn-safe {
+      flex: 1;
+      background: #059669;
+      color: #fff;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+    }
+
+    /* Co-Pilot Chat Sidebar */
+    .chat-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 120px);
+      position: sticky;
+      top: 60px;
+    }
+    .chat-header {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .chat-msg {
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      max-width: 90%;
+    }
+    .msg-user { background: #2563eb; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-agent { background: #182232; border: 1px solid #233348; color: #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; }
+    .chat-form {
+      display: flex;
+      padding: 0.75rem;
+      gap: 0.5rem;
+      border-top: 1px solid var(--card-border);
+    }
+    .chat-input {
+      flex: 1;
+      background: #182232;
+      border: 1px solid #233348;
+      border-radius: 6px;
+      color: #fff;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.88rem;
+    }
+    .chat-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Responder Table */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    table.data-table th, table.data-table td {
+      border: 1px solid #233348;
+      padding: 0.65rem 0.8rem;
+      text-align: left;
+    }
+    table.data-table th { background: #16202e; color: #94a3b8; font-weight: 700; }
+    table.data-table tr:nth-child(even) { background: #121924; }
+
+    /* Visual Certificate & Emergency Card Styling */
+    .emergency-certificate-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%);
+      border: 3px double #38bdf8;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.7), inset 0 0 40px rgba(56, 189, 248, 0.08);
+      position: relative;
+      max-width: 780px;
+      margin: 0 auto;
+      color: #f8fafc;
+    }
+    .cert-seal {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #f59e0b 0%, #b45309 80%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5);
+      border: 2px dashed #fef3c7;
+      text-align: center;
+    }
+    .cert-seal span { font-size: 0.62rem; font-weight: 800; color: #fff; line-height: 1; text-transform: uppercase; }
+    .cert-header { border-bottom: 2px solid #334155; padding-bottom: 1rem; margin-bottom: 1.25rem; }
+    .cert-title { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; color: #38bdf8; }
+    .cert-subtitle { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
+    .cert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    .cert-field { background: rgba(15, 23, 42, 0.6); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #334155; }
+    .cert-label { font-size: 0.72rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 3px; }
+    .cert-val { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+    .cert-badge-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .cert-badge { font-size: 0.72rem; padding: 3px 8px; border-radius: 9999px; font-weight: 700; }
+    .cert-badge-alert { background: #7f1d1d; color: #fecaca; border: 1px solid #ef4444; }
+    .cert-badge-med { background: #1e3a8a; color: #bfdbfe; border: 1px solid #3b82f6; }
+    .cert-badge-pet { background: #14532d; color: #bbf7d0; border: 1px solid #22c55e; }
+    .cert-footer {
+      border-top: 1px solid #334155;
+      padding-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Emergency Hotline Bar -->
+  <div class="top-emergency-bar">
+    <div>🚨 FOR IMMEDIATE LIFE-THREATENING EMERGENCIES: DIAL 112 (INDIA NATIONAL EMERGENCY)</div>
+    <a href="tel:112" class="sos-call">📞 CALL 112</a>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div>
+        <h1>SafeHaven</h1>
+        <div style="font-size: 0.78rem; color: #94a3b8;">Disaster & Emergency Assistant • India</div>
+      </div>
+      <span>SIMULATED TRAINING MODE</span>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('screen-home', this)">🏠 Risk & Evacuation</button>
+      <button class="nav-tab" onclick="switchTab('screen-shelters', this)">📍 Shelters & High Ground</button>
+      <button class="nav-tab" onclick="switchTab('screen-card', this)">🪪 Printable Emergency Card</button>
+      <button class="nav-tab" onclick="switchTab('screen-responder', this)">🚨 Responder Dashboard</button>
+    </div>
+  </header>
+
+  <div class="main-container">
+    
+    <!-- Main Left Screens Area -->
+    <div class="content-area">
+
+      <!-- Scenario & Household Control Bar -->
+      <div class="scenario-bar">
+        <div class="control-group">
+          <label>Scenario / Disaster Type</label>
+          <select id="sel-disaster" onchange="runEvaluation()">
+            <option value="flood">🌊 Urban Flooding (Bengaluru)</option>
+            <option value="heatwave">☀️ Severe Heatwave (Peak 40.5°C)</option>
+            <option value="cyclone">🌀 Approaching Cyclone 'Sagar' (Udupi)</option>
+            <option value="storm_surge">🌊 Coastal Storm Surge (4.5m Wave)</option>
+            <option value="tsunami">🚨 Tsunami (Sea Recession / High Ground)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Remembered Household</label>
+          <select id="sel-household" onchange="onHouseholdChange()">
+            <option value="HH-BLR-01">Ramesh Rao (Sarjapur, Elderly, Insulin, Dog)</option>
+            <option value="HH-BLR-02">Kamala Devi (Indiranagar, Elderly Alone)</option>
+            <option value="HH-UDP-01">Shekar Kunder (Malpe, Fisher, Infant, 300m Coast)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Language / ಭಾಷೆ / भाषा</label>
+          <select id="sel-language" onchange="runEvaluation()">
+            <option value="en">English (Default)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SCREEN 1: Home Risk & Evacuation -->
+      <div id="screen-home" class="screen active">
+        
+        <!-- Directive Banner -->
+        <div id="directive-container" class="directive-banner evacuate">
+          <div class="directive-title" id="directive-title">Evaluating risk...</div>
+          <div class="directive-text" id="directive-text">Loading instructions...</div>
+        </div>
+
+        <!-- Household Memory Badge -->
+        <div class="card" style="background: #101826; border-color: #1e2e42;">
+          <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #60a5fa; display:flex; justify-content:space-between;">
+            <span>🧠 Remembered Household Profile</span>
+            <span id="hh-coastal-dist" style="font-size:0.8rem; color:#f59e0b;"></span>
+          </h3>
+          <div id="hh-details" style="font-size: 0.86rem; color: #cbd5e1; line-height: 1.5;"></div>
+        </div>
+
+        <!-- Personalized Safety Checklist -->
+        <div class="card">
+          <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #fff;">✅ Personalized Safety Action Checklist</h3>
+          <div id="checklist-container"></div>
+        </div>
+
+        <!-- Emergency Status Buttons (Safe / SOS) -->
+        <div class="card" style="border-color: #374151;">
+          <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #fff;">📢 Check-in & Contact Notification</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Update your status. This logs into the District Responder Dashboard and alerts your emergency contacts.
+          </p>
+          <div class="sos-btn-row">
+            <button class="btn-safe" onclick="sendCheckin('SAFE')">
+              <span>✅</span> I Am Safe (Mark Safe)
+            </button>
+            <button class="btn-sos" onclick="sendCheckin('NEED_HELP')">
+              <span>🚨</span> I Need Help (Trigger SOS)
+            </button>
+          </div>
+          <div id="checkin-feedback" style="margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600;"></div>
+        </div>
+
+      </div>
+
+      <!-- SCREEN 2: Shelters, Hospitals & High Ground -->
+      <div id="screen-shelters" class="screen">
+        <div class="card">
+          <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">📍 Nearest Evacuation Hubs & Relief Centers</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Ranked by proximity and accessibility. Verified for wheelchair ramps, pet shelter, and insulin refrigeration.
+          </p>
+          <div id="locations-list" class="locations-grid"></div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size: 1rem; color: #fff; margin-bottom: 0.5rem;">⚓ Coastal & Fishing Operations Status</h3>
+          <div id="sea-tracker-container" style="font-size: 0.88rem;"></div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: Printable Emergency Wallet Card -->
+      <div id="screen-card" class="screen">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <h3 style="font-size: 1.15rem; color: #fff;">🪪 Emergency Identity Card & Disaster Pass</h3>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin-top:2px;">
+                Verified household emergency credential for SDRF/NDRF checkpoints, rescue teams, and relief camps.
+              </p>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button onclick="toggleCardFormat()" id="btn-toggle-card" style="background:#1e293b; color:#93c5fd; border:1px solid #334155; padding:0.5rem 0.9rem; border-radius:6px; font-weight:600; cursor:pointer;">
+                📄 View Plain Text
+              </button>
+              <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:0.5rem 1.1rem; border-radius:6px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.4);">
+                🖨️ Print / Save PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Beautiful Visual Certificate Display -->
+          <div id="visual-card-container" class="emergency-certificate-card">
+            <div class="cert-seal">
+              <span style="font-size:1.1rem;">🛡️</span>
+              <span>SAFE<br>HAVEN</span>
+            </div>
+
+            <div class="cert-header">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <span style="font-size:1.4rem;">🇮🇳</span>
+                <div>
+                  <div class="cert-title">DISASTER EMERGENCY PASS</div>
+                  <div class="cert-subtitle">National Emergency Response Registry • Dial 112</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cert-grid">
+              <div class="cert-field">
+                <div class="cert-label">Resident Name</div>
+                <div class="cert-val" id="cert-name">Ramesh Rao</div>
+                <div style="font-size:0.8rem; color:#93c5fd; margin-top:2px;" id="cert-phone">+91-9845012345</div>
+              </div>
+
+              <div class="cert-field">
+                <div class="cert-label">Primary Household Location</div>
+                <div class="cert-val" style="font-size:0.92rem;" id="cert-location">Rainbow Drive Layout, Sarjapur Road, Bengaluru</div>
+                <div style="font-size:0.75rem; color:#facc15; margin-top:2px;" id="cert-home-type">Structure: GROUND FLOOR APARTMENT</div>
+              </div>
+            </div>
+
+            <div class="cert-grid">
+              <div class="cert-field">
+                <div class="cert-label">Critical Medical Vulnerabilities</div>
+                <div id="cert-meds-box" class="cert-badge-row"></div>
+              </div>
+
+              <div class="cert-field">
+                <div class="cert-label">Dependent Members & Pets</div>
+                <div id="cert-vuln-box" class="cert-badge-row"></div>
+              </div>
+            </div>
+
+            <div class="cert-field" style="margin-bottom:1.25rem;">
+              <div class="cert-label">Emergency Contacts & Relatives</div>
+              <div id="cert-contacts-box" style="font-size:0.88rem; color:#e2e8f0; line-height:1.4; margin-top:3px;"></div>
+            </div>
+
+            <div class="cert-footer">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <span style="font-size:1.1rem;">🚨</span>
+                <span style="font-weight:700; color:#f87171;">Toll-Free 24x7 National Helpline: 112</span>
+              </div>
+              <div style="font-size:0.75rem; color:#94a3b8;">
+                SafeHaven ID: <span id="cert-id" style="font-family:monospace; color:#38bdf8;">SH-BLR-01</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Raw Text Version (hidden by default) -->
+          <pre id="card-pre" style="display:none; background:#090d14; border:1px solid #233348; padding:1.2rem; border-radius:8px; font-family:'JetBrains Mono', monospace; font-size:0.86rem; color:#a5f3fc; white-space:pre-wrap; line-height:1.5; margin-top:1rem;"></pre>
+        </div>
+      </div>
+
+      <!-- SCREEN 4: Responder Dashboard -->
+      <div id="screen-responder" class="screen">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+            <h3 style="font-size: 1.1rem; color: #fff;">🚨 District Emergency Responder Console (SDRF / NDRF)</h3>
+            <span style="background:#7f1d1d; color:#fecaca; font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700;">LIVE DISPATCH MONITOR</span>
+          </div>
+          <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Incoming distress SOS calls and household vulnerabilities sorted by life-threat severity.
+          </p>
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="responder-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name / Phone</th>
+                  <th>Location</th>
+                  <th>Urgency</th>
+                  <th>Needs & Vulnerabilities</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="responder-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Sidebar: Interactive Emergency Co-Pilot -->
+    <div class="chat-panel">
+      <div class="chat-header">
+        <span>🛡️ SafeHaven AI Co-Pilot</span>
+        <span style="font-size:0.72rem; background:#16a34a; color:#fff; padding:2px 6px; border-radius:4px;">ONLINE</span>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg msg-agent">
+          Namaste! I am <strong>SafeHaven</strong>, your disaster co-pilot. I have loaded your household profile. How can I assist with your safety? In danger, always dial <strong>112</strong> first!
+        </div>
+      </div>
+      <form class="chat-form" id="chat-form">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Ask about safety, shelters, or evacuation...">
+        <button type="submit" class="chat-btn">Send</button>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    let currentHousehold = null;
+
+    function switchTab(screenId, btn) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      if (btn) btn.classList.add('active');
+      if (screenId === 'screen-shelters') loadSafeLocations();
+      if (screenId === 'screen-responder') loadHelpRequests();
+      if (screenId === 'screen-card') loadEmergencyCard();
+    }
+
+    async function loadHouseholds() {
+      try {
+        const res = await fetch('/api/households');
+        const data = await res.json();
+        const sel = document.getElementById('sel-household');
+        sel.innerHTML = '';
+        data.forEach(hh => {
+          const opt = document.createElement('option');
+          opt.value = hh.id;
+          opt.textContent = `${hh.user_name} (${hh.location_name})`;
+          sel.appendChild(opt);
+        });
+        if (data.length > 0) {
+          currentHousehold = data[0];
+          renderHouseholdDetails(currentHousehold);
+          runEvaluation();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function onHouseholdChange() {
+      const hhId = document.getElementById('sel-household').value;
+      fetch('/api/households')
+        .then(r => r.json())
+        .then(list => {
+          currentHousehold = list.find(h => h.id === hhId);
+          renderHouseholdDetails(currentHousehold);
+          runEvaluation();
+        });
+    }
+
+    function renderHouseholdDetails(hh) {
+      if (!hh) return;
+      document.getElementById('hh-coastal-dist').textContent = `Distance to coast: ${hh.distance_from_coast_km} km`;
+      document.getElementById('hh-details').innerHTML = `
+        <strong>User:</strong> ${hh.user_name} (${hh.phone}) • <strong>Location:</strong> ${hh.location_name}<br>
+        <strong>Home Structure:</strong> ${hh.home_type.toUpperCase()} • <strong>Works at Sea:</strong> ${hh.works_at_sea ? 'YES' : 'No'}<br>
+        <strong>Vulnerabilities:</strong> Elderly: ${hh.has_elderly ? 'YES' : 'No'}, Disabled: ${hh.has_disabled ? 'YES' : 'No'}, Infants: ${hh.has_infants ? 'YES' : 'No'}<br>
+        <strong>Critical Medicines:</strong> ${hh.critical_medicines.join(', ') || 'None reported'}<br>
+        <strong>Pets / Livestock:</strong> ${hh.pets_livestock.join(', ') || 'None reported'}
+      `;
+    }
+
+    async function runEvaluation() {
+      const disaster = document.getElementById('sel-disaster').value;
+      const hhId = document.getElementById('sel-household').value;
+      const lang = document.getElementById('sel-language').value;
+
+      try {
+        const res = await fetch('/api/evaluate_risk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            disaster_type: disaster,
+            location_name: currentHousehold ? currentHousehold.location_name : "Bengaluru",
+            household_id: hhId,
+            language: lang
+          })
+        });
+        const data = await res.json();
+        
+        // Render Directive
+        const dBox = document.getElementById('directive-container');
+        dBox.className = 'directive-banner ' + (data.evacuate ? 'evacuate' : 'stay');
+        document.getElementById('directive-title').innerHTML = `${data.headline}`;
+        document.getElementById('directive-text').innerHTML = `
+          <strong>ACTION DIRECTIVE:</strong> ${data.directive}<br>
+          ${data.advisories.map(a => `<div style="margin-top:4px; color:#fde047;">${a}</div>`).join('')}
+          ${data.call_112_priority ? `<div style="margin-top:6px; color:#f87171; font-weight:800;">🚨 LIFE THREAT PRIORITY: Call 112 immediately if water is rising or medical aid is stranded.</div>` : ''}
+        `;
+
+        // Render Checklist
+        const cBox = document.getElementById('checklist-container');
+        cBox.innerHTML = '';
+        data.checklist.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'checklist-item';
+          div.innerHTML = `<input type="checkbox"> <span>${item}</span>`;
+          cBox.appendChild(div);
+        });
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function sendCheckin(status) {
+      if (!currentHousehold) return;
+      const fb = document.getElementById('checkin-feedback');
+      fb.innerHTML = 'Sending status update...';
+      try {
+        const res = await fetch('/api/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_name: currentHousehold.user_name,
+            phone: currentHousehold.phone,
+            status: status,
+            location_name: currentHousehold.location_name,
+            needs_description: status === 'NEED_HELP' ? 'Disaster emergency assistance needed' : 'Household marked safe',
+            has_elderly: Boolean(currentHousehold.has_elderly),
+            has_pets: currentHousehold.pets_livestock.length > 0,
+            requires_medical: currentHousehold.critical_medicines.length > 0
+          })
+        });
+        const data = await res.json();
+        
+        if (status === 'NEED_HELP') {
+          fb.innerHTML = `<span style="color:#f87171;">🚨 SOS Registered! Navigating to nearest safe shelters & hospitals...</span>`;
+          // Automatically shift to solutions (shelters, high ground, and relief camps)
+          setTimeout(() => {
+            const shelterTabBtn = document.querySelectorAll('.nav-tab')[1];
+            switchTab('screen-shelters', shelterTabBtn);
+          }, 900);
+        } else {
+          fb.innerHTML = `<span style="color:#10b981;">${data.message}</span>`;
+        }
+      } catch (e) {
+        fb.innerHTML = 'Error updating status: ' + e.message;
+      }
+    }
+
+    async function loadSafeLocations() {
+      try {
+        const res = await fetch('/api/safe_locations');
+        const locs = await res.json();
+        const container = document.getElementById('locations-list');
+        container.innerHTML = '';
+        locs.forEach(l => {
+          const badgeClass = l.location_type === 'shelter' || l.location_type === 'cyclone_relief_center' ? 'badge-shelter' : (l.location_type === 'hospital' ? 'badge-hospital' : 'badge-highground');
+          const div = document.createElement('div');
+          div.className = 'loc-card';
+          div.innerHTML = `
+            <div class="loc-header">
+              <span>${l.name}</span>
+              <span class="loc-badge ${badgeClass}">${l.location_type.toUpperCase()}</span>
+            </div>
+            <div style="font-size:0.8rem; color:#94a3b8;">${l.address}</div>
+            <div style="font-size:0.8rem; color:#e2e8f0; margin-top:4px;">
+              ⛰️ Elevation: <strong>${l.elevation_meters}m</strong> • Capacity: ${l.current_occupancy}/${l.capacity}
+            </div>
+            <div style="font-size:0.75rem; color:#60a5fa; margin-top:2px;">
+              ${l.is_wheelchair_accessible ? '♿ Accessible ' : ''}
+              ${l.is_pet_friendly ? '🐾 Pet-Friendly ' : ''}
+              ${l.has_medical_facility ? '🏥 Medical Care' : ''}
+            </div>
+            <div style="font-size:0.8rem; color:#facc15; font-weight:700; margin-top:4px;">
+              📞 Helpline: ${l.contact_phone}
+            </div>
+          `;
+          container.appendChild(div);
+        });
+
+        // Also load Sea Tracker
+        const stRes = await fetch('/api/sea_trackers');
+        const stList = await stRes.json();
+        const stBox = document.getElementById('sea-tracker-container');
+        stBox.innerHTML = stList.map(b => `
+          <div style="padding:0.6rem; background:#182232; border-radius:6px; margin-top:0.5rem; border-left:4px solid #38bdf8;">
+            <strong>Boat:</strong> ${b.boat_name} (Captain: ${b.captain_name})<br>
+            <strong>Last Position:</strong> ${b.last_known_location} • <strong>Status:</strong> <span style="color:#f59e0b; font-weight:700;">${b.status}</span><br>
+            <strong>Base:</strong> ${b.harbor_base}
+          </div>
+        `).join('') || 'No vessels currently tracked.';
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let isPlainTextCard = false;
+    function toggleCardFormat() {
+      isPlainTextCard = !isPlainTextCard;
+      const vCard = document.getElementById('visual-card-container');
+      const pCard = document.getElementById('card-pre');
+      const btn = document.getElementById('btn-toggle-card');
+      if (isPlainTextCard) {
+        vCard.style.display = 'none';
+        pCard.style.display = 'block';
+        btn.textContent = '🖼️ View Visual Pass';
+      } else {
+        vCard.style.display = 'block';
+        pCard.style.display = 'none';
+        btn.textContent = '📄 View Plain Text';
+      }
+    }
+
+    async function loadEmergencyCard() {
+      if (!currentHousehold) return;
+      try {
+        const res = await fetch(`/api/emergency_card?user=${encodeURIComponent(currentHousehold.user_name)}`);
+        const data = await res.json();
+        document.getElementById('card-pre').textContent = data.card_text;
+
+        const hh = data.household || currentHousehold;
+        document.getElementById('cert-name').textContent = hh.user_name || 'Resident';
+        document.getElementById('cert-phone').textContent = hh.phone || 'N/A';
+        document.getElementById('cert-location').textContent = hh.location_name || 'India';
+        document.getElementById('cert-home-type').textContent = `Structure: ${(hh.home_type || 'standard').toUpperCase()}`;
+        document.getElementById('cert-id').textContent = hh.id || 'SH-IND-01';
+
+        // Meds
+        const medsBox = document.getElementById('cert-meds-box');
+        medsBox.innerHTML = '';
+        const meds = hh.critical_medicines || [];
+        if (meds.length > 0) {
+          meds.forEach(m => {
+            const span = document.createElement('span');
+            span.className = 'cert-badge cert-badge-med';
+            span.textContent = `💊 ${m}`;
+            medsBox.appendChild(span);
+          });
+        } else {
+          medsBox.innerHTML = '<span style="font-size:0.8rem; color:#94a3b8;">No critical medicines reported</span>';
+        }
+
+        // Vulnerabilities & Pets
+        const vulnBox = document.getElementById('cert-vuln-box');
+        vulnBox.innerHTML = '';
+        if (hh.has_elderly) {
+          vulnBox.innerHTML += `<span class="cert-badge cert-badge-alert">👴 Elderly Member</span>`;
+        }
+        if (hh.has_infants) {
+          vulnBox.innerHTML += `<span class="cert-badge cert-badge-alert">👶 Infant / Baby</span>`;
+        }
+        if (hh.has_disabled) {
+          vulnBox.innerHTML += `<span class="cert-badge cert-badge-alert">♿ Mobility Impaired</span>`;
+        }
+        if (hh.works_at_sea) {
+          vulnBox.innerHTML += `<span class="cert-badge cert-badge-alert">⚓ Coastal Fisherman</span>`;
+        }
+        const pets = hh.pets_livestock || [];
+        pets.forEach(p => {
+          vulnBox.innerHTML += `<span class="cert-badge cert-badge-pet">🐾 ${p}</span>`;
+        });
+        if (!vulnBox.innerHTML) {
+          vulnBox.innerHTML = '<span style="font-size:0.8rem; color:#94a3b8;">None recorded</span>';
+        }
+
+        // Emergency Contacts
+        const contactsBox = document.getElementById('cert-contacts-box');
+        contactsBox.innerHTML = '';
+        const contacts = hh.emergency_contacts || [];
+        if (contacts.length > 0) {
+          contacts.forEach(c => {
+            contactsBox.innerHTML += `<div><strong>${c.name}</strong> (${c.relation}): <a href="tel:${c.phone}" style="color:#38bdf8; text-decoration:none;">${c.phone}</a></div>`;
+          });
+        } else {
+          contactsBox.innerHTML = '<div>Primary Emergency Contact: 112 (National Helpline)</div>';
+        }
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadHelpRequests() {
+      try {
+        const res = await fetch('/api/help_requests');
+        const list = await res.json();
+        const tbody = document.getElementById('responder-tbody');
+        tbody.innerHTML = '';
+        list.forEach(r => {
+          const tr = document.createElement('tr');
+          const isCrit = r.urgency === 'CRITICAL_LIFE_THREAT';
+          tr.innerHTML = `
+            <td><code>${r.id}</code></td>
+            <td><strong>${r.user_name}</strong><br><span style="color:#94a3b8;">${r.phone}</span></td>
+            <td>${r.location_name}</td>
+            <td><span style="color:${isCrit ? '#ef4444' : '#10b981'}; font-weight:700;">${r.urgency}</span></td>
+            <td>${r.needs_description}<br><small style="color:#93c5fd;">${r.responder_notes || ''}</small></td>
+            <td><small>${r.created_at}</small></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Co-Pilot Chat Form
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const val = input.value.trim();
+      if (!val) return;
+
+      appendChatMessage('user', val);
+      input.value = '';
+
+      const lang = document.getElementById('sel-language').value;
+      const hhId = currentHousehold ? currentHousehold.id : "HH-BLR-01";
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: val, household_id: hhId, language: lang })
+        });
+        const data = await res.json();
+        appendChatMessage('agent', data.reply);
+      } catch (err) {
+        appendChatMessage('agent', 'Error connecting to co-pilot: ' + err.message);
+      }
+    });
+
+    function appendChatMessage(sender, text) {
+      const box = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = `chat-msg msg-${sender}`;
+      div.innerHTML = text.replace(/\n/g, '<br>');
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // Initial load
+    loadHouseholds();
+  </script>
+</body>
+</html>
